@@ -14,7 +14,7 @@ from pydantic import BaseModel
 import secrets
 import aiohttp
 import logging
-from storage_utils import create_new_token, get_token_data, update_token_status # يجب تحديث هذا الملف للعمل في الذاكرة
+from storage_utils import create_new_token, get_token_data, update_token_status # الآن يستخدم التخزين في الذاكرة
 
 # إعداد Logging
 logging.basicConfig(level=logging.INFO)
@@ -47,7 +47,6 @@ class CompleteAdRequest(BaseModel):
 async def create_token(request: CreateTokenRequest):
     """
     إنشاء توكن تحقق جديد
-    يستدعى من البوت عند طلب مشاهدة إعلان
     """
     # التحقق من المفتاح السري
     if request.secret != BOT_SECRET:
@@ -60,8 +59,6 @@ async def create_token(request: CreateTokenRequest):
     create_new_token(request.user_id, token)
     
     # إنشاء رابط التحقق
-    # تم تغيير الرابط الأساسي إلى http://localhost:8000 لضمان العمل على Vercel إذا كان الرابط القديم غير صحيح
-    # يمكنك تغييره إلى رابط Vercel الفعلي بعد النشر: https://manhaj-ai-api.vercel.app
     verify_url = f"https://manhaj-ai-api.vercel.app/verify-ad/{token}" 
     
     logger.info(f"Created token for user {request.user_id}: {token}")
@@ -77,7 +74,6 @@ async def create_token(request: CreateTokenRequest):
 async def check_token(request: CheckTokenRequest):
     """
     التحقق من حالة التوكن
-    يستدعى من البوت للتحقق إذا تمت المشاهدة
     """
     # التحقق من المفتاح السري
     if request.secret != BOT_SECRET:
@@ -102,7 +98,7 @@ async def check_token(request: CheckTokenRequest):
     }
 
 # ------------------------------------------------
-# الدالة المعدلة مع المؤقت
+# الدالة المعدلة مع المؤقت (15 ثانية)
 # ------------------------------------------------
 
 @app.get("/verify-ad/{token}", response_class=HTMLResponse)
@@ -386,8 +382,18 @@ async def verify_ad_page(token: str):
                     // يتم التحقق هنا من حالة استجابة الشبكة (HTTP status)
                     if (!response.ok) {{
                         // إذا كانت الحالة 500 أو 404 أو غيرها
-                        const errorData = await response.json().catch(() => ({{}})); 
-                        throw new Error(errorData.detail || 'فشل التحقق بسبب خطأ في الخادم (يرجى مراجعة سجلات Vercel)');
+                        const errorText = await response.text();
+                        let errorMessage = 'فشل التحقق بسبب خطأ في الخادم (يرجى مراجعة سجلات Vercel).';
+                        
+                        try {{
+                            const errorData = JSON.parse(errorText);
+                            errorMessage = errorData.detail || errorMessage;
+                        }} catch {{
+                            // إذا لم يكن Response بصيغة JSON، استخدم النص خاماً
+                            errorMessage = `فشل الخادم: ${response.status} ${errorText.substring(0, 100)}`;
+                        }}
+
+                        throw new Error(errorMessage);
                     }}
 
                     const data = await response.json();
@@ -410,7 +416,7 @@ async def verify_ad_page(token: str):
                 }} catch (error) {{
                     // معالجة خطأ الشبكة (No Internet) أو الخطأ الذي تم إثارته أعلاه
                     msgDiv.className = 'error';
-                    msgDiv.innerHTML = `❌ <strong>خطأ في الاتصال</strong><br>يرجى المحاولة مرة أخرى والتأكد من اتصالك بالإنترنت. تفاصيل الخطأ: ${error.message}`;
+                    msgDiv.innerHTML = `❌ <strong>خطأ في الاتصال</strong><br>يرجى المحاولة مرة أخرى والتأكد من اتصالك بالإنترنت. <br>تفاصيل الخطأ: ${error.message}`;
                     msgDiv.style.display = 'block';
                     confirmBtn.disabled = false;
                     confirmBtn.textContent = '✅ أكد المشاهدة الآن'; // إعادة الزر لحالته
