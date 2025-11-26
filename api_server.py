@@ -1,9 +1,11 @@
+# mini_app/api_server.py
+
 """
 api_server.py - FastAPI Server للتحقق من الإعلانات (Monetag)
 
 هذا الملف يدير:
 1. توليد التوكنات للمستخدمين
-2. عرض واجهة المشاهدة
+2. عرض واجهة المشاهدة مع عداد 7 ثواني (جديد)
 3. التحقق من المشاهدة وإرسال Postback لـ Monetag
 4. التواصل مع بوت التليجرام
 """
@@ -14,7 +16,8 @@ from pydantic import BaseModel
 import secrets
 import aiohttp
 import logging
-from storage_utils import create_new_token, get_token_data, update_token_status
+# تأكد أن ملف storage_utils.py موجود في نفس المجلد ويحتوي على دوال التخزين (في الذاكرة أو MongoDB)
+from storage_utils import create_new_token, get_token_data, update_token_status 
 
 # إعداد Logging
 logging.basicConfig(level=logging.INFO)
@@ -22,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 # الثوابت
 BOT_SECRET = "3HydCoOi2byXBvkjAtG98KOT1u-r18t0G5aPPbHWvcY"
-MONETAG_POSTBACK_URL = "https://api.monetag.com/postback?token={token}&status=completed"  # استبدل بالرابط الفعلي من Monetag
-AD_LINK = "https://otieu.com/4/10231904"  # رابط الإعلان من Monetag
+MONETAG_POSTBACK_URL = "https://api.monetag.com/postback?token={token}&status=completed"
+AD_LINK = "https://otieu.com/4/10231904" # رابط الإعلان من Monetag
 
 app = FastAPI(title="Manhaj AI - Ad Verification API")
 
@@ -45,21 +48,14 @@ class CompleteAdRequest(BaseModel):
 
 @app.post("/api/create-token")
 async def create_token(request: CreateTokenRequest):
-    """
-    إنشاء توكن تحقق جديد
-    يستدعى من البوت عند طلب مشاهدة إعلان
-    """
-    # التحقق من المفتاح السري
+    """إنشاء توكن تحقق جديد"""
     if request.secret != BOT_SECRET:
         raise HTTPException(status_code=403, detail="Invalid secret key")
     
-    # توليد توكن فريد
     token = secrets.token_urlsafe(32)
-    
-    # حفظ في التخزين
     create_new_token(request.user_id, token)
     
-    # إنشاء رابط التحقق
+    # رابط Vercel الخاص بك
     verify_url = f"https://manhaj-ai-api.vercel.app/verify-ad/{token}"
     
     logger.info(f"Created token for user {request.user_id}: {token}")
@@ -73,15 +69,10 @@ async def create_token(request: CreateTokenRequest):
 
 @app.post("/api/check-token")
 async def check_token(request: CheckTokenRequest):
-    """
-    التحقق من حالة التوكن
-    يستدعى من البوت للتحقق إذا تمت المشاهدة
-    """
-    # التحقق من المفتاح السري
+    """التحقق من حالة التوكن"""
     if request.secret != BOT_SECRET:
         raise HTTPException(status_code=403, detail="Invalid secret key")
     
-    # البحث عن التوكن
     token_data = get_token_data(request.token)
     
     if not token_data:
@@ -101,11 +92,7 @@ async def check_token(request: CheckTokenRequest):
 
 @app.get("/verify-ad/{token}", response_class=HTMLResponse)
 async def verify_ad_page(token: str):
-    """
-    صفحة HTML لمشاهدة الإعلان
-    يفتحها المستخدم من البوت
-    """
-    # التحقق من وجود التوكن
+    """صفحة HTML لمشاهدة الإعلان (محدثة بعداد 7 ثوانٍ)"""
     token_data = get_token_data(token)
     
     if not token_data:
@@ -220,7 +207,11 @@ async def verify_ad_page(token: str):
                 transition: all 0.3s;
                 margin-top: 20px;
             }}
-            #confirmBtn:hover {{
+            #confirmBtn:disabled {{
+                background: #95a5a6; /* لون رمادي عند التعطيل */
+                cursor: not-allowed;
+            }}
+            #confirmBtn:hover:not(:disabled) {{
                 background: #229954;
                 transform: translateY(-2px);
             }}
@@ -250,9 +241,9 @@ async def verify_ad_page(token: str):
                 <strong>📋 التعليمات:</strong>
                 <ol>
                     <li>اضغط على زر "فتح الإعلان" أدناه</li>
-                    <li>شاهد الإعلان حتى النهاية</li>
+                    <li>شاهد الإعلان 7 ثوانٍ على الأقل</li>
                     <li>ارجع لهذه الصفحة</li>
-                    <li>اضغط على زر "أكد المشاهدة"</li>
+                    <li>اضغط على زر "أكد المشاهدة" بعد تفعيله</li>
                 </ol>
             </div>
             
@@ -262,8 +253,8 @@ async def verify_ad_page(token: str):
             
             <br><br>
             
-            <button id="confirmBtn" onclick="confirmView()">
-                ✅ أكد المشاهدة
+            <button id="confirmBtn" onclick="confirmView()" disabled>
+                ⏳ يرجى الانتظار 7 ثوانٍ للتحقق...
             </button>
             
             <div id="message"></div>
@@ -271,8 +262,28 @@ async def verify_ad_page(token: str):
 
         <script>
             const token = '{token}';
+            const confirmBtn = document.getElementById('confirmBtn');
+            const WAIT_TIME_SECONDS = 7;
             let adWasOpened = false;
             
+            // 🟢 وظيفة العداد والتفعيل (7 ثوانٍ)
+            window.onload = function() {{
+                let timeLeft = WAIT_TIME_SECONDS;
+                
+                // 1. تفعيل عداد الوقت
+                const timerInterval = setInterval(() => {{
+                    if (timeLeft > 0) {{
+                        confirmBtn.textContent = `⏳ يرجى الانتظار ${timeLeft} ثوانٍ للتحقق...`;
+                        timeLeft--;
+                    }} else {{
+                        clearInterval(timerInterval);
+                        confirmBtn.textContent = '✅ أكد المشاهدة الآن';
+                        // 2. تفعيل الزر بعد انتهاء العداد
+                        confirmBtn.disabled = false; 
+                    }}
+                }}, 1000);
+            }};
+
             function adOpened() {{
                 adWasOpened = true;
             }}
@@ -281,6 +292,7 @@ async def verify_ad_page(token: str):
                 const btn = document.getElementById('confirmBtn');
                 const msgDiv = document.getElementById('message');
                 
+                // تحقق إضافي لضمان أن المستخدم قد ضغط على رابط الإعلان مرة واحدة على الأقل
                 if (!adWasOpened) {{
                     msgDiv.className = 'error';
                     msgDiv.style.display = 'block';
@@ -333,21 +345,14 @@ async def verify_ad_page(token: str):
 
 @app.post("/api/complete-ad")
 async def complete_ad(request: CompleteAdRequest):
-    """
-    تأكيد مشاهدة الإعلان وإرسال Postback لـ Monetag
-    
-    هذه هي النقطة الحاسمة:
-    1. التحقق من التوكن
-    2. تحديث الحالة
-    3. إرسال Postback لـ Monetag
-    """
+    """تأكيد مشاهدة الإعلان وإرسال Postback لـ Monetag"""
     token = request.token
     
-    # البحث عن التوكن
     token_data = get_token_data(token)
     
     if not token_data:
-        raise HTTPException(status_code=404, detail="Token not found")
+        # إعطاء رسالة واضحة بخصوص مشكلة Vercel
+        raise HTTPException(status_code=404, detail="Token not found (Data might have been lost from Vercel's temporary memory).")
     
     if token_data["verified"]:
         raise HTTPException(status_code=400, detail="Already verified")
@@ -367,7 +372,6 @@ async def complete_ad(request: CompleteAdRequest):
                     logger.error(f"⚠️ Postback failed with status {response.status} for token {token}")
     except Exception as e:
         logger.error(f"❌ Error sending postback for token {token}: {e}")
-        # نكمل حتى لو فشل الـ Postback
     
     logger.info(f"Token {token} marked as verified for user {token_data['user_id']}")
     
