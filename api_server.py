@@ -149,24 +149,10 @@ async def verify_ad_page(token: str):
     token_data = get_token(token)
     
     if not token_data:
-        return f"""<html>
-<head><title>رابط غير صالح</title></head>
-<body style='text-align:center;padding:50px;font-family:Arial;'>
-    <h1>❌ رابط غير صالح</h1>
-    <p>التوكن غير موجود أو منتهي الصلاحية</p>
-</body>
-{AD_SCRIPTS}
-</html>"""
+        return "<html><body style='text-align:center;padding:50px;font-family:Arial;'><h1>❌ رابط غير صالح</h1></body></html>"
     
     if token_data["verified"]:
-        return f"""<html>
-<head><title>تم التحقق مسبقاً</title></head>
-<body style='text-align:center;padding:50px;font-family:Arial;'>
-    <h1>✅ تم التحقق مسبقاً</h1>
-    <p>لقد تم التحقق من هذا الإعلان مسبقاً</p>
-</body>
-{AD_SCRIPTS}
-</html>"""
+        return "<html><body style='text-align:center;padding:50px;font-family:Arial;'><h1>✅ تم التحقق مسبقاً</h1></body></html>"
     
     return f"""<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -284,24 +270,10 @@ async def verify_task_page(token: str):
     token_data = get_token(token)
     
     if not token_data:
-        return f"""<html>
-<head><title>رابط غير صالح</title></head>
-<body style='text-align:center;padding:50px;font-family:Arial;'>
-    <h1>❌ رابط غير صالح</h1>
-    <p>التوكن غير موجود أو منتهي الصلاحية</p>
-</body>
-{AD_SCRIPTS}
-</html>"""
+        return "<html><body style='text-align:center;padding:50px;font-family:Arial;'><h1>❌ رابط غير صالح</h1></body></html>"
     
     if token_data["verified"]:
-        return f"""<html>
-<head><title>تم التحقق مسبقاً</title></head>
-<body style='text-align:center;padding:50px;font-family:Arial;'>
-    <h1>✅ تم التحقق مسبقاً</h1>
-    <p>لقد تم التحقق من هذه المهمة مسبقاً</p>
-</body>
-{AD_SCRIPTS}
-</html>"""
+        return "<html><body style='text-align:center;padding:50px;font-family:Arial;'><h1>✅ تم التحقق مسبقاً</h1></body></html>"
     
     task = token_data.get("task_data", {})
     return f"""<!DOCTYPE html>
@@ -342,9 +314,6 @@ async def verify_task_page(token: str):
         <button id="confirmBtn" onclick="confirmTask()" disabled>🔒 انتظر 8 ثواني</button>
         <div id="message"></div>
     </div>
-    
-    {AD_SCRIPTS}
-    
     <script>
         let taskOpened = false;
         let timerStarted = false;
@@ -451,92 +420,18 @@ async def complete_task(request: CompleteRequest):
     update_token(request.token, verified=True)
     return {"success": True, "message": "Task completed", "user_id": token_data["user_id"], "task_data": token_data.get("task_data")}
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def root():
-    """الصفحة الرئيسية مع الإعلانات"""
-    return f"""<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manhaj AI Verification API</title>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ font-family: Arial; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }}
-        .container {{ background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 800px; width: 100%; padding: 40px; text-align: center; }}
-        h1 {{ color: #667eea; margin-bottom: 20px; }}
-        .status {{ background: #d4edda; color: #155724; padding: 15px; border-radius: 10px; margin: 20px 0; border: 2px solid #c3e6cb; }}
-        .endpoints {{ background: #e3f2fd; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: right; border: 2px solid #90caf9; }}
-        .endpoint {{ margin: 10px 0; padding: 10px; background: white; border-radius: 5px; }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 Manhaj AI Verification API</h1>
-        <div class="status">
-            <h2>✅ الخدمة تعمل بشكل طبيعي</h2>
-            <p>نظام التحقق من الإعلانات والمهام</p>
-        </div>
-        
-        <div class="endpoints">
-            <h3>📡 Endpoints المتاحة:</h3>
-            <div class="endpoint"><strong>POST</strong> /api/create-token - إنشاء توكن إعلان</div>
-            <div class="endpoint"><strong>POST</strong> /api/create-task-token - إنشاء توكن مهمة</div>
-            <div class="endpoint"><strong>POST</strong> /api/check-token - التحقق من التوكن</div>
-            <div class="endpoint"><strong>GET</strong> /verify-ad/{'{token}'} - صفحة الإعلان</div>
-            <div class="endpoint"><strong>GET</strong> /verify-task/{'{token}'} - صفحة المهمة</div>
-            <div class="endpoint"><strong>POST</strong> /api/complete-ad - إكمال الإعلان</div>
-            <div class="endpoint"><strong>POST</strong> /api/complete-task - إكمال المهمة</div>
-        </div>
-        
-        <p>⚡ تم تطوير النظام بواسطة Manhaj AI</p>
-    </div>
-    
-    {AD_SCRIPTS}
-</body>
-</html>"""
-
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    """الصفحة الرئيسية مع الإعلانات"""
-    return f"""<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manhaj AI Verification API</title>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ font-family: Arial; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }}
-        .container {{ background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 800px; width: 100%; padding: 40px; text-align: center; }}
-        h1 {{ color: #667eea; margin-bottom: 20px; }}
-        .status {{ background: #d4edda; color: #155724; padding: 15px; border-radius: 10px; margin: 20px 0; border: 2px solid #c3e6cb; }}
-        .endpoints {{ background: #e3f2fd; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: right; border: 2px solid #90caf9; }}
-        .endpoint {{ margin: 10px 0; padding: 10px; background: white; border-radius: 5px; }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 Manhaj AI Verification API</h1>
-        <div class="status">
-            <h2>✅ الخدمة تعمل بشكل طبيعي</h2>
-            <p>نظام التحقق من الإعلانات والمهام</p>
-        </div>
-        
-        <div class="endpoints">
-            <h3>📡 Endpoints المتاحة:</h3>
-            <div class="endpoint"><strong>POST</strong> /api/create-token - إنشاء توكن إعلان</div>
-            <div class="endpoint"><strong>POST</strong> /api/create-task-token - إنشاء توكن مهمة</div>
-            <div class="endpoint"><strong>POST</strong> /api/check-token - التحقق من التوكن</div>
-            <div class="endpoint"><strong>GET</strong> /verify-ad/{'{token}'} - صفحة الإعلان</div>
-            <div class="endpoint"><strong>GET</strong> /verify-task/{'{token}'} - صفحة المهمة</div>
-            <div class="endpoint"><strong>POST</strong> /api/complete-ad - إكمال الإعلان</div>
-            <div class="endpoint"><strong>POST</strong> /api/complete-task - إكمال المهمة</div>
-        </div>
-        
-        <p>⚡ تم تطوير النظام بواسطة Manhaj AI</p>
-    </div>
-    
-    {AD_SCRIPTS}
-</body>
-</html>"""
+    return {
+        "service": "Manhaj AI Verification API",
+        "status": "running",
+        "endpoints": {
+            "create_ad_token": "POST /api/create-token",
+            "create_task_token": "POST /api/create-task-token",
+            "check_token": "POST /api/check-token",
+            "verify_ad": "GET /verify-ad/{token}",
+            "verify_task": "GET /verify-task/{token}",
+            "complete_ad": "POST /api/complete-ad",
+            "complete_task": "POST /api/complete-task"
+        }
+    }
