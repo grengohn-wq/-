@@ -181,8 +181,6 @@ async def verify_ad_page(token: str):
         <button id="confirmBtn" onclick="confirmView()" disabled>🔒 انتظر 8 ثواني</button>
         <div id="message"></div>
     </div>
-    <script>(function(s){s.dataset.zone='10205976',s.src='https://groleegni.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    <script>(function(s){s.dataset.zone='10206003',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
     <script>
         let adOpened = false;
         let timerStarted = false;
