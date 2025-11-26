@@ -149,24 +149,10 @@ async def verify_ad_page(token: str):
     token_data = get_token(token)
     
     if not token_data:
-        return f"""<html>
-<head><title>رابط غير صالح</title></head>
-<body style='text-align:center;padding:50px;font-family:Arial;'>
-    <h1>❌ رابط غير صالح</h1>
-    <p>التوكن غير موجود أو منتهي الصلاحية</p>
-</body>
-{AD_SCRIPTS}
-</html>"""
+        return "<html><body style='text-align:center;padding:50px;font-family:Arial;'><h1>❌ رابط غير صالح</h1></body></html>"
     
     if token_data["verified"]:
-        return f"""<html>
-<head><title>تم التحقق مسبقاً</title></head>
-<body style='text-align:center;padding:50px;font-family:Arial;'>
-    <h1>✅ تم التحقق مسبقاً</h1>
-    <p>لقد تم التحقق من هذا الإعلان مسبقاً</p>
-</body>
-{AD_SCRIPTS}
-</html>"""
+        return "<html><body style='text-align:center;padding:50px;font-family:Arial;'><h1>✅ تم التحقق مسبقاً</h1></body></html>"
     
     return f"""<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -284,24 +270,10 @@ async def verify_task_page(token: str):
     token_data = get_token(token)
     
     if not token_data:
-        return f"""<html>
-<head><title>رابط غير صالح</title></head>
-<body style='text-align:center;padding:50px;font-family:Arial;'>
-    <h1>❌ رابط غير صالح</h1>
-    <p>التوكن غير موجود أو منتهي الصلاحية</p>
-</body>
-{AD_SCRIPTS}
-</html>"""
+        return "<html><body style='text-align:center;padding:50px;font-family:Arial;'><h1>❌ رابط غير صالح</h1></body></html>"
     
     if token_data["verified"]:
-        return f"""<html>
-<head><title>تم التحقق مسبقاً</title></head>
-<body style='text-align:center;padding:50px;font-family:Arial;'>
-    <h1>✅ تم التحقق مسبقاً</h1>
-    <p>لقد تم التحقق من هذه المهمة مسبقاً</p>
-</body>
-{AD_SCRIPTS}
-</html>"""
+        return "<html><body style='text-align:center;padding:50px;font-family:Arial;'><h1>✅ تم التحقق مسبقاً</h1></body></html>"
     
     task = token_data.get("task_data", {})
     return f"""<!DOCTYPE html>
@@ -342,9 +314,6 @@ async def verify_task_page(token: str):
         <button id="confirmBtn" onclick="confirmTask()" disabled>🔒 انتظر 8 ثواني</button>
         <div id="message"></div>
     </div>
-    
-    {AD_SCRIPTS}
-    
     <script>
         let taskOpened = false;
         let timerStarted = false;
