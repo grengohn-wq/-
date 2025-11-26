@@ -182,8 +182,6 @@ async def verify_ad_page(token: str):
         <div id="message"></div>
     </div>
     <script>
-    <script>(function(s){s.dataset.zone='10205976',s.src='https://groleegni.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    <script>(function(s){s.dataset.zone='10206003',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
         let adOpened = false;
         let timerStarted = false;
         let countdown = 8;
