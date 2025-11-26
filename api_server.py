@@ -24,6 +24,12 @@ BOT_SECRET = "3HydCoOi2byXBvkjAtG98KOT1u-r18t0G5aPPbHWvcY"
 MONETAG_POSTBACK_URL = "https://api.monetag.com/postback?token={token}&status=completed"
 AD_LINK = "https://otieu.com/4/10231904"
 
+# Ad scripts
+AD_SCRIPTS = """
+<script>(function(s){s.dataset.zone='10206003',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<script>(function(s){s.dataset.zone='10205976',s.src='https://groleegni.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+"""
+
 # In-memory storage (يتم استبداله بقاعدة بيانات في Production)
 tokens_store: Dict[str, dict] = {}
 
@@ -151,7 +157,7 @@ async def verify_ad_page(token: str):
     return f"""<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مشاهدة الإعلان</title>
     <style>
@@ -181,6 +187,9 @@ async def verify_ad_page(token: str):
         <button id="confirmBtn" onclick="confirmView()" disabled>🔒 انتظر 8 ثواني</button>
         <div id="message"></div>
     </div>
+    
+    {AD_SCRIPTS}
+    
     <script>
         let adOpened = false;
         let timerStarted = false;
